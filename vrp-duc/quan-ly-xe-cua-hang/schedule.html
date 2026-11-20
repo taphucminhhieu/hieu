@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lịch tuần · VRP-GO</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="apple-touch-icon" href="../assets/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .cal-wrap { overflow-x: auto; }
+    .cal {
+      display: grid;
+      grid-template-columns: 110px repeat(7, minmax(90px, 1fr));
+      gap: 6px;
+      min-width: 780px;
+      font-size: 12.5px;
+      text-align: center;
+    }
+    .cal .head { font-weight: 700; padding: 10px 4px; color: var(--muted); }
+    .cal .name {
+      font-weight: 700; text-align: left; padding: 8px 6px;
+      display: flex; flex-direction: column; justify-content: center;
+      font-size: 12px; color: var(--primary-dark);
+    }
+    .cal .name small { font-weight: 500; color: var(--muted); font-size: 11px; }
+    .cell {
+      border-radius: 10px; padding: 10px 6px; min-height: 52px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 2px; font-weight: 600; border: 1px solid transparent;
+    }
+    .cell small { font-weight: 500; font-size: 10px; opacity: 0.85; }
+    .c-free { background: #f1f5f4; color: #64748b; }
+    .c-rent { background: #d1fae5; color: #047857; border-color: #a7f3d0; }
+    .c-hold { background: #fef3c7; color: #b45309; border-color: #fde68a; }
+    .c-maint { background: #e2e8f0; color: #475569; }
+    .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; font-size: 13px; }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .legend i { width: 14px; height: 14px; border-radius: 4px; display: inline-block; }
+  </style>
+  <script>
+    /* Chặn giao diện cửa hàng ngay từ đầu trang với người không có quyền */
+    (function () {
+      var ROLE_KEY = "vrp_role";
+      var roleParam = new URLSearchParams(window.location.search).get("role");
+      var role = "guest";
+
+      if (roleParam) {
+        try { localStorage.setItem(ROLE_KEY, roleParam); } catch (err) {}
+        document.cookie = ROLE_KEY + "=" + encodeURIComponent(roleParam) + "; path=/; SameSite=Lax";
+        role = roleParam;
+      } else {
+        try { role = localStorage.getItem(ROLE_KEY) || ""; } catch (err) {}
+        if (!role) {
+          var match = document.cookie.match(/(?:^|;\s*)vrp_role=([^;]+)/);
+          role = match ? decodeURIComponent(match[1]) : "guest";
+        }
+      }
+
+      if (!role) role = "guest";
+      if (role !== "store" && role !== "admin") {
+        document.documentElement.className += " vrp-locked";
+      }
+    })();
+  </script>
+</head>
+<body>
+<div class="access-gate access-gate--static" role="dialog" aria-modal="true">
+  <div class="access-card">
+    <div class="access-lock" aria-hidden="true">🔒</div>
+    <p class="access-kicker">VRP-GO · KHU VỰC CỬA HÀNG</p>
+    <h1>Bạn cần được phân quyền</h1>
+    <p class="access-desc">Giao diện cửa hàng chỉ dành cho tài khoản chủ cửa hàng đã được VRP-GO cấp quyền.</p>
+    <div class="access-actions">
+      <a href="../pages/login.html" class="btn btn-primary">Đăng nhập cửa hàng</a>
+      <a href="../index.html" class="btn btn-outline">Về trang chủ</a>
+    </div>
+    <div class="access-demo"><span>Bản demo:</span><button type="button" id="demoStoreAccess">Xem với quyền cửa hàng</button></div>
+  </div>
+</div>
+<header class="header">
+  <div class="container header-container">
+    <a href="../index.html" class="logo"><span class="logo-mark" aria-hidden="true"><img src="../assets/logo-vrp.png" alt=""></span><span class="logo-text"><span class="vrp">VRP</span><span class="go">-GO</span></span></a>
+    <nav class="navbar"><ul class="nav-list">
+      <li><a href="../index.html">Trang chủ</a></li>
+      <li><a href="../pages/vehicles.html">Thuê xe</a></li>
+      <li><a href="../pages/how-it-works.html">Cách hoạt động</a></li>
+      <li><a href="../pages/my-orders.html">Đơn của tôi</a></li>
+      <li><a href="../store/dashboard.html" class="active">Cửa hàng</a></li>
+    </ul></nav>
+    <div class="header-user"><div class="avatar">CH</div><span class="user-name">Cửa hàng CG</span></div>
+  </div>
+</header>
+<div class="layout-store">
+  <aside class="sidebar">
+    <h3>QUẢN LÝ CHỦ XE</h3>
+    <a class="menu" href="dashboard.html">📊 Dashboard</a>
+    <a class="menu" href="inventory.html">🚗 Kho xe</a>
+    <a class="menu active" href="schedule.html">📅 Lịch tuần</a>
+    <a class="menu" href="orders.html">📋 Đơn thuê</a>
+    <a class="menu" href="revenue.html">💰 Doanh thu</a>
+    <a class="menu" href="pricing.html">⚙️ Cài đặt giá</a>
+  </aside>
+  <main class="store-main">
+    <div class="page-head">
+      <h1>Lịch tuần · 10–16/11/2026</h1>
+      <p>Xem lịch xe theo tuần, chặn khung giờ bảo dưỡng. Hover ô để xem mã đơn.</p>
+    </div>
+    <div class="legend">
+      <span><i style="background:#d1fae5"></i> Đang thuê</span>
+      <span><i style="background:#fef3c7"></i> Giữ chỗ</span>
+      <span><i style="background:#f1f5f4"></i> Trống</span>
+      <span><i style="background:#e2e8f0"></i> Bảo dưỡng</span>
+    </div>
+    <div class="card cal-wrap"
+      data-data-area data-skeleton="rows" data-skeleton-count="4"
+      data-item=".name" data-empty="none">
+      <div class="cal">
+        <div class="head"></div>
+        <div class="head">T2<br>10/11</div>
+        <div class="head">T3<br>11/11</div>
+        <div class="head">T4<br>12/11</div>
+        <div class="head">T5<br>13/11</div>
+        <div class="head">T6<br>14/11</div>
+        <div class="head">T7<br>15/11</div>
+        <div class="head">CN<br>16/11</div>
+
+        <div class="name">Air Blade 160<small>51G1-23456</small></div>
+        <div class="cell c-rent">Thuê<small>ORD-8910</small></div>
+        <div class="cell c-rent">Thuê<small>ORD-8910</small></div>
+        <div class="cell c-free">Trống</div>
+        <div class="cell c-hold">Giữ<small>ORD-8921</small></div>
+        <div class="cell c-rent">Thuê<small>ORD-8930</small></div>
+        <div class="cell c-rent">Thuê<small>ORD-8930</small></div>
+        <div class="cell c-free">Trống</div>
+
+        <div class="name">Exciter 155<small>51G1-77889</small></div>
+        <div class="cell c-free">Trống</div>
+        <div class="cell c-rent">Thuê<small>ORD-8902</small></div>
+        <div class="cell c-rent">Thuê<small>ORD-8902</small></div>
+        <div class="cell c-rent">Thuê<small>ORD-8902</small></div>
+        <div class="cell c-free">Trống</div>
+        <div class="cell c-hold">Giữ<small>ORD-8935</small></div>
+        <div class="cell c-rent">Thuê<small>ORD-8940</small></div>
+
+        <div class="name">Vision 2024<small>51G1-11223</small></div>
+        <div class="cell c-rent">Thuê<small>ORD-8899</small></div>
+        <div class="cell c-free">Trống</div>
+        <div class="cell c-free">Trống</div>
+        <div class="cell c-rent">Thuê<small>ORD-8925</small></div>
+        <div class="cell c-rent">Thuê<small>ORD-8925</small></div>
+        <div class="cell c-free">Trống</div>
+        <div class="cell c-free">Trống</div>
+
+        <div class="name">SH Mode 125<small>51G1-55667</small></div>
+        <div class="cell c-maint">Bảo dưỡng</div>
+        <div class="cell c-maint">Bảo dưỡng</div>
+        <div class="cell c-free">Trống</div>
+        <div class="cell c-free">Trống</div>
+        <div class="cell c-rent">Thuê<small>ORD-8932</small></div>
+        <div class="cell c-rent">Thuê<small>ORD-8932</small></div>
+        <div class="cell c-rent">Thuê<small>ORD-8932</small></div>
+
+        <div class="name">Janus 2023<small>51G1-33445</small></div>
+        <div class="cell c-free">Trống</div>
+        <div class="cell c-hold">Giữ<small>ORD-8918</small></div>
+        <div class="cell c-rent">Thuê<small>ORD-8918</small></div>
+        <div class="cell c-rent">Thuê<small>ORD-8918</small></div>
+        <div class="cell c-free">Trống</div>
+        <div class="cell c-free">Trống</div>
+        <div class="cell c-rent">Thuê<small>ORD-8942</small></div>
+
+        <div class="name">Feliz S<small>51G1-99887</small></div>
+        <div class="cell c-rent">Thuê<small>ORD-8905</small></div>
+        <div class="cell c-rent">Thuê<small>ORD-8905</small></div>
+        <div class="cell c-free">Trống</div>
+        <div class="cell c-free">Trống</div>
+        <div class="cell c-hold">Giữ<small>ORD-8938</small></div>
+        <div class="cell c-maint">Bảo dưỡng</div>
+        <div class="cell c-free">Trống</div>
+
+        <div class="name">Lead 125<small>51G1-66778</small></div>
+        <div class="cell c-free">Trống</div>
+        <div class="cell c-free">Trống</div>
+        <div class="cell c-rent">Thuê<small>ORD-8915</small></div>
+        <div class="cell c-rent">Thuê<small>ORD-8915</small></div>
+        <div class="cell c-rent">Thuê<small>ORD-8915</small></div>
+        <div class="cell c-free">Trống</div>
+        <div class="cell c-hold">Giữ<small>ORD-8945</small></div>
+
+        <div class="name">Winner X<small>51G1-44556</small></div>
+        <div class="cell c-rent">Thuê<small>ORD-8908</small></div>
+        <div class="cell c-free">Trống</div>
+        <div class="cell c-hold">Giữ<small>ORD-8920</small></div>
+        <div class="cell c-rent">Thuê<small>ORD-8928</small></div>
+        <div class="cell c-rent">Thuê<small>ORD-8928</small></div>
+        <div class="cell c-rent">Thuê<small>ORD-8928</small></div>
+        <div class="cell c-free">Trống</div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:18px">
+      <h3 style="margin-bottom:12px">Ghi chú tuần này</h3>
+      <ul style="padding-left:18px;color:var(--muted);font-size:14px;line-height:1.7">
+        <li>SH Mode 125 bảo dưỡng T2–T3 (thay dầu + lốp).</li>
+        <li>Feliz S bảo dưỡng T7 (kiểm tra pin).</li>
+        <li>5 đơn giữ chỗ sẽ hết hạn nếu khách không thanh toán cọc trong 30 phút.</li>
+        <li>Cuối tuần (T7–CN) tỷ lệ lấp đầy dự kiến 78%.</li>
+      </ul>
+    </div>
+  </main>
+</div>
+<script src="../js/effects.js"></script>
+</body>
+</html>

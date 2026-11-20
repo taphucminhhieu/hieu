@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard cửa hàng · VRP-GO</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/favicon.svg">
+  <link rel="apple-touch-icon" href="../assets/favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+  <script>
+    /* Chặn giao diện cửa hàng ngay từ đầu trang với người không có quyền */
+    (function () {
+      var ROLE_KEY = "vrp_role";
+      var roleParam = new URLSearchParams(window.location.search).get("role");
+      var role = "guest";
+
+      if (roleParam) {
+        try { localStorage.setItem(ROLE_KEY, roleParam); } catch (err) {}
+        document.cookie = ROLE_KEY + "=" + encodeURIComponent(roleParam) + "; path=/; SameSite=Lax";
+        role = roleParam;
+      } else {
+        try { role = localStorage.getItem(ROLE_KEY) || ""; } catch (err) {}
+        if (!role) {
+          var match = document.cookie.match(/(?:^|;\s*)vrp_role=([^;]+)/);
+          role = match ? decodeURIComponent(match[1]) : "guest";
+        }
+      }
+
+      if (!role) role = "guest";
+      if (role !== "store" && role !== "admin") {
+        document.documentElement.className += " vrp-locked";
+      }
+    })();
+  </script>
+</head>
+<body>
+<div class="access-gate access-gate--static" role="dialog" aria-modal="true">
+  <div class="access-card">
+    <div class="access-lock" aria-hidden="true">🔒</div>
+    <p class="access-kicker">VRP-GO · KHU VỰC CỬA HÀNG</p>
+    <h1>Bạn cần được phân quyền</h1>
+    <p class="access-desc">Giao diện cửa hàng chỉ dành cho tài khoản chủ cửa hàng đã được VRP-GO cấp quyền.</p>
+    <div class="access-actions">
+      <a href="../pages/login.html" class="btn btn-primary">Đăng nhập cửa hàng</a>
+      <a href="../index.html" class="btn btn-outline">Về trang chủ</a>
+    </div>
+    <div class="access-demo"><span>Bản demo:</span><button type="button" id="demoStoreAccess">Xem với quyền cửa hàng</button></div>
+  </div>
+</div>
+<header class="header">
+  <div class="container header-container">
+    <a href="../index.html" class="logo"><span class="logo-mark" aria-hidden="true"><img src="../assets/logo-vrp.png" alt=""></span><span class="logo-text"><span class="vrp">VRP</span><span class="go">-GO</span></span></a>
+    <nav class="navbar">
+      <ul class="nav-list">
+        <li><a href="../index.html">Trang chủ</a></li>
+        <li><a href="../pages/vehicles.html">Thuê xe</a></li>
+        <li><a href="../pages/how-it-works.html">Cách hoạt động</a></li>
+        <li><a href="../pages/my-orders.html">Đơn của tôi</a></li>
+        <li><a href="../store/dashboard.html" class="active">Cửa hàng</a></li>
+      </ul>
+    </nav>
+    <div class="header-user"><div class="avatar">CH</div><span class="user-name">Cửa hàng CG</span></div>
+  </div>
+</header>
+<div class="layout-store">
+  <aside class="sidebar">
+    <h3>QUẢN LÝ CHỦ XE</h3>
+    <a class="menu active" href="dashboard.html">📊 Dashboard</a>
+    <a class="menu" href="inventory.html">🚗 Kho xe</a>
+    <a class="menu" href="schedule.html">📅 Lịch tuần</a>
+    <a class="menu" href="orders.html">📋 Đơn thuê</a>
+    <a class="menu" href="revenue.html">💰 Doanh thu</a>
+    <a class="menu" href="pricing.html">⚙️ Cài đặt giá</a>
+  </aside>
+  <main class="store-main">
+    <div class="page-head">
+      <h1>Dashboard cửa hàng</h1>
+      <p>Số đơn theo trạng thái, doanh thu, tỷ lệ lấp đầy.</p>
+    </div>
+    <div class="stats-grid" style="margin-bottom:24px">
+      <div class="stat-card"><strong>45,8tr</strong><span>Doanh thu tháng</span></div>
+      <div class="stat-card"><strong>128</strong><span>Lượt thuê</span></div>
+      <div class="stat-card"><strong>08/12</strong><span>Xe đang cho thuê</span></div>
+      <div class="stat-card"><strong>05</strong><span>Đơn chờ xác nhận</span></div>
+    </div>
+    <div class="card"
+      data-data-area data-skeleton="rows" data-skeleton-count="3"
+      data-item=".dash-order-row"
+      data-empty-icon="✅"
+      data-empty-title="Không có đơn mới cần xác nhận"
+      data-empty-text="Đơn mới sẽ xuất hiện ở đây khi khách đặt xe và chờ cửa hàng xác nhận.">
+      <h3 style="margin-bottom:12px">Đơn mới cần xác nhận (15 phút)</h3>
+      <p style="color:var(--muted);font-size:13.5px;margin-bottom:16px">Quá hạn sẽ chuyển bộ phận hỗ trợ xử lý.</p>
+      <div class="dash-order-row" style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid #f0f4f2;flex-wrap:wrap;gap:10px">
+        <div><strong>ORD-8921</strong> · Nguyễn Văn Tuấn · Honda Air Blade<br><span style="font-size:12px;color:var(--muted)">Còn ~12:00</span></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" style="padding:8px 14px" onclick="showToast('Đã xác nhận đơn ORD-8921')">Xác nhận</button>
+          <button class="btn btn-ghost" style="padding:8px 14px" onclick="showToast('Đã từ chối đơn')">Từ chối</button>
+        </div>
+      </div>
+      <div class="dash-order-row" style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;flex-wrap:wrap;gap:10px">
+        <div><strong>ORD-8922</strong> · Trần Thị Mai · Yamaha Exciter<br><span style="font-size:12px;color:var(--danger)">Còn ~03:20 · Khẩn</span></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" style="padding:8px 14px" onclick="showToast('Đã xác nhận đơn ORD-8922')">Xác nhận</button>
+          <button class="btn btn-ghost" style="padding:8px 14px" onclick="showToast('Đã từ chối đơn')">Từ chối</button>
+        </div>
+      </div>
+
+      <div class="dash-order-row" style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid #f0f4f2;flex-wrap:wrap;gap:10px">
+        <div><strong>ORD-8935</strong> · Lê Hoàng · Janus 2023<br><span style="font-size:12px;color:var(--muted)">Còn ~08:45</span></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" style="padding:8px 14px" onclick="showToast('Đã xác nhận ORD-8935')">Xác nhận</button>
+          <button class="btn btn-ghost" style="padding:8px 14px" onclick="showToast('Đã từ chối')">Từ chối</button>
+        </div>
+      </div>
+      <div class="dash-order-row" style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid #f0f4f2;flex-wrap:wrap;gap:10px">
+        <div><strong>ORD-8938</strong> · Vũ Khoa · Feliz S<br><span style="font-size:12px;color:var(--muted)">Còn ~11:10</span></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" style="padding:8px 14px" onclick="showToast('Đã xác nhận ORD-8938')">Xác nhận</button>
+          <button class="btn btn-ghost" style="padding:8px 14px" onclick="showToast('Đã từ chối')">Từ chối</button>
+        </div>
+      </div>
+      <div class="dash-order-row" style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;flex-wrap:wrap;gap:10px">
+        <div><strong>ORD-8940</strong> · Mai Chi · Exciter<br><span style="font-size:12px;color:var(--danger)">Còn ~02:05 · Khẩn</span></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" style="padding:8px 14px" onclick="showToast('Đã xác nhận ORD-8940')">Xác nhận</button>
+          <button class="btn btn-ghost" style="padding:8px 14px" onclick="showToast('Đã từ chối')">Từ chối</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+<script src="../js/effects.js"></script>
+</body>
+</html>
