@@ -216,8 +216,8 @@ function saveProfile(event) {
 }
 
 
-// Hiển thị ảnh GPLX vừa chọn
-function previewLicense(event) {
+// Hiển thị ảnh giấy tờ vừa chọn (GPLX, CCCD mặt trước/sau)
+function previewDoc(event, key) {
     const file = event.target.files && event.target.files[0];
 
     if (!file) return;
@@ -231,9 +231,9 @@ function previewLicense(event) {
     const reader = new FileReader();
 
     reader.onload = function (e) {
-        const img = document.getElementById('licensePreviewImg');
-        const wrap = document.getElementById('licensePreview');
-        const name = document.getElementById('licenseFileName');
+        const img = document.getElementById(key + 'PreviewImg');
+        const wrap = document.getElementById(key + 'Preview');
+        const name = document.getElementById(key + 'FileName');
 
         if (img) img.src = e.target.result;
         if (name) name.textContent = file.name;
@@ -243,11 +243,11 @@ function previewLicense(event) {
     reader.readAsDataURL(file);
 }
 
-// Xoá ảnh GPLX đã chọn
-function removeLicensePreview() {
-    const input = document.getElementById('licenseFileInput');
-    const wrap = document.getElementById('licensePreview');
-    const img = document.getElementById('licensePreviewImg');
+// Xoá ảnh giấy tờ đã chọn
+function removeDoc(key) {
+    const input = document.getElementById(key + 'FileInput');
+    const wrap = document.getElementById(key + 'Preview');
+    const img = document.getElementById(key + 'PreviewImg');
 
     if (input) input.value = '';
     if (img) img.removeAttribute('src');

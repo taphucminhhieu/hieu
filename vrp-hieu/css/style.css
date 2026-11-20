@@ -526,7 +526,7 @@ img { max-width: 100%; display: block; }
 
 .search-bar {
   margin-top: 28px; padding: 14px;
-  display: grid; grid-template-columns: 1.2fr 1.1fr 1.1fr auto;
+  display: grid; grid-template-columns: 1fr 1fr auto;
   gap: 10px; align-items: end;
 }
 .search-bar .field label {
@@ -913,10 +913,41 @@ img { max-width: 100%; display: block; }
   cursor: pointer;
   color: #334155;
 }
-.filter-group input {
+.filter-group input[type="checkbox"],
+.filter-group input[type="radio"] {
   accent-color: var(--primary);
   width: 16px;
   height: 16px;
+}
+
+.filter-dates .date-row {
+  display: grid;
+  grid-template-columns: 1fr 92px;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.filter-dates .date-row:last-child {
+  margin-bottom: 0;
+}
+
+.filter-dates .date-row input[type="date"],
+.filter-dates .date-row select {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: #334155;
+  background: #fafcfb;
+}
+
+.filter-dates .date-row input[type="date"]:focus,
+.filter-dates .date-row select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(7, 155, 112, 0.15);
 }
 
 .vehicle-grid {

@@ -2075,6 +2075,33 @@ body {
     margin-top: 2px;
 }
 
+.doc-upload-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}
+
+.doc-upload-grid .license-upload {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.doc-upload-grid .license-upload-text {
+    flex: none;
+}
+
+.doc-upload-grid .license-upload-btn {
+    align-self: stretch;
+    text-align: center;
+}
+
+@media (max-width: 900px) {
+    .doc-upload-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .license-upload {
     display: flex;
     align-items: center;

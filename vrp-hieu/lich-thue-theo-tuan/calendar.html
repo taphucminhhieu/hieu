@@ -269,13 +269,13 @@
 
             <!-- FOOTER THÔNG BÁO -->
             <div class="table-footer">
-                <span>💡 Bấm vào ô lịch có màu để xem chi tiết thông tin khách đặt và mã đơn.</span>
+                <span class="tf-note">💡 Bấm vào ô lịch có màu để xem chi tiết thông tin khách đặt và mã đơn.</span>
                 <span class="sync-status">
                     <span class="ping-container">
                         <span class="ping-wave"></span>
                         <span class="ping-dot"></span>
                     </span>
-                    Trạng thái được cật nhập lại mới sau 30s
+                    Tự động cập nhật lại sau 30 giây
                 </span>
             </div>
         </div>
@@ -283,7 +283,9 @@
     </main>
 
     <footer class="footer">
-        <div class="container footer-bottom">© 2026 VRP-GO · Vehicle Rental Platform</div>
+        <div class="footer-inner">
+            <div class="footer-bottom">© 2026 VRP-GO</div>
+        </div>
     </footer>
     <script src="../js/effects.js"></script>
     <script>
@@ -388,8 +390,43 @@
             return selected;
         }
 
+        var SHIFT_NAMES = ["Sáng", "Chiều", "Tối"];
+
+        function buildShifts() {
+            document.querySelectorAll(".schedule-table tbody tr").forEach(function (tr) {
+                var cells = Array.prototype.slice.call(tr.querySelectorAll("td")).slice(1);
+                cells.forEach(function (td) {
+                    var card = td.querySelector(".booking-card");
+                    if (!card) {
+                        td.innerHTML = '<span class="empty-main">+ Trống</span>' +
+                            '<span class="empty-shifts">Sáng · Chiều · Tối: trống</span>';
+                        return;
+                    }
+
+                    var orderEl = td.querySelector(".order-id");
+                    var order = orderEl ? orderEl.textContent.trim() : "";
+                    var state = card.classList.contains("card-confirmed") ? "confirmed"
+                        : card.classList.contains("card-holding") ? "holding" : "pending";
+                    var onShifts = state === "confirmed" ? [0, 1, 2] : state === "holding" ? [0] : [2];
+                    var label = state === "confirmed" ? "Đã đặt" : state === "holding" ? "Giữ chỗ" : "Chờ duyệt";
+
+                    var lines = SHIFT_NAMES.map(function (name, i) {
+                        var on = onShifts.indexOf(i) !== -1;
+                        return '<div class="shift-line ' + (on ? "is-on" : "is-off") + '">' +
+                            '<span class="shift-name">' + name + '</span>' +
+                            '<em>' + (on ? label : "Trống") + '</em></div>';
+                    }).join("");
+
+                    var cls = card.className.replace(/\s*is-shifts\s*/g, " ").trim();
+                    td.innerHTML = '<div class="' + cls + ' is-shifts">' + lines +
+                        (order ? '<div class="order-id">' + order + '</div>' : "") + '</div>';
+                });
+            });
+        }
+
         selectVehicle();
         renderWeek();
+        buildShifts();
 
         var filters = document.querySelectorAll(".filter-bar .btn-filter");
         if (filters[0]) filters[0].addEventListener("click", function () { weekOffset -= 1; renderWeek(); });
